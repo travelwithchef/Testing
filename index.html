@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Haunted Window Scene</title>
+  <title>Haunted Window Click to Slide</title>
   <style>
     body {
       margin: 0;
@@ -16,22 +16,27 @@
     .window-container {
       width: 1333px;
       height: 2000px;
-      background-color: #000; /* Black window frame */
+      background-color: #000;
       position: relative;
       overflow: hidden;
       border: 10px solid #222;
       box-shadow: 0 0 30px rgba(0,0,0,0.9);
+      cursor: pointer;
     }
 
     .shutter {
       width: 100%;
       height: 100%;
-      background-color: #111; /* Shutter color */
+      background-color: #111;
       position: absolute;
       top: 0;
       left: 0;
       z-index: 2;
-      transition: top 2s ease;
+      transition: left 2s ease;
+    }
+
+    .shutter.slide-left {
+      left: -100%;
     }
 
     .window-scene {
@@ -47,16 +52,15 @@
 </head>
 <body>
 
-  <div class="window-container">
+  <div class="window-container" onclick="slideWindow()">
     <div class="shutter" id="shutter"></div>
     <div class="window-scene"></div>
   </div>
 
   <script>
-    // Automatically slide the shutter up after 2 seconds
-    setTimeout(() => {
-      document.getElementById('shutter').style.top = '-100%';
-    }, 2000);
+    function slideWindow() {
+      document.getElementById('shutter').classList.add('slide-left');
+    }
   </script>
 
 </body>
