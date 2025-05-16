@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAN MARINO</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }.cross {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.horizontal-bar, .vertical-bar {
+  position: absolute;
+  background-color: #555;
+  opacity: 0.7;
+}
+
+.horizontal-bar {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  transform: translateY(-50%);
+}
+
+.vertical-bar {
+  left: 50%;
+  top: 0;
+  height: 100%;
+  width: 100px;
+  transform: translateX(-50%);
+}
+
+.blue-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  background-color: rgba(0, 51, 102, 0.8);
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blue-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(70, 100, 150, 0.4);
+}
+
+.text {
+  color: white;
+  font-family: serif;
+  font-size: 48px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+  </style>
+</head>
+<body>
+  <div class="cross">
+    <div class="horizontal-bar"></div>
+    <div class="vertical-bar"></div>
+  </div>
+  <div class="blue-box">
+    <div class="blue-overlay"></div>
+    <div class="text">SAN MARINO</div>
+  </div>
+</body>
+</html>
