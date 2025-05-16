@@ -3,39 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>San Marino Sliding Window</title>
+  <title>Perfect San Marino Slide</title>
   <style>
     html, body {
-      margin: 0; padding: 0;
-      height: 100%; width: 100%;
-      background-color: black;
+      margin: 0;
+      padding: 0;
+      background: black;
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100%;
     }
 
-    .container {
+    .wrapper {
       position: relative;
       width: 1333px;
       height: 2000px;
-      background: url('san_marino.png') no-repeat center center;
+      background-image: url('san_marino.png');
       background-size: cover;
+      background-position: center;
       overflow: hidden;
     }
 
-    .overlay-image {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 1333px;
-      height: 2000px;
-      background: url('window-san-marino.png') no-repeat center center;
-      background-size: cover;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .slider-window {
+    .slide-window {
       position: absolute;
       width: 300px;
       height: 300px;
@@ -43,46 +33,54 @@
       left: 50%;
       transform: translate(-50%, -50%);
       overflow: hidden;
-      z-index: 2;
       cursor: pointer;
+      z-index: 2;
+      transition: transform 1.5s ease;
     }
 
-    .slider-content {
+    .slide-window.open {
+      transform: translate(calc(-50% - 150px), -50%);
+    }
+
+    .window-image {
+      position: absolute;
       width: 1333px;
       height: 2000px;
-      background: url('window-san-marino.png') no-repeat center center;
+      top: 0;
+      left: 0;
+      background-image: url('window-san-marino.png');
       background-size: cover;
-      transform: translate(-50%, -50%);
+      background-position: center;
+      pointer-events: none;
+    }
+
+    .window-mask {
       position: absolute;
       top: 0;
       left: 0;
-      transition: transform 2s ease;
+      width: 1333px;
+      height: 2000px;
+      background-color: rgba(0, 102, 204, 0.8); /* blue glass effect */
+      z-index: 1;
     }
-
-    .slide-left .slider-content {
-      transform: translate(-250%, -50%);
-    }
-
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Background san_marino.png is set in .container -->
-    
-    <!-- This adds the background to slide under -->
-    <div class="overlay-image"></div>
+  <div class="wrapper">
+    <!-- mask that creates blue window illusion -->
+    <div class="window-mask"></div>
 
-    <!-- Blue card window that slides -->
-    <div class="slider-window" id="sliderWindow">
-      <div class="slider-content"></div>
+    <!-- sliding card window -->
+    <div class="slide-window" id="windowSlider">
+      <div class="window-image"></div>
     </div>
   </div>
 
   <script>
-    const slider = document.getElementById('sliderWindow');
-    slider.addEventListener('click', () => {
-      slider.classList.toggle('slide-left');
+    const windowSlider = document.getElementById('windowSlider');
+    windowSlider.addEventListener('click', () => {
+      windowSlider.classList.toggle('open');
     });
   </script>
 
