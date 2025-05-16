@@ -1,68 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Slide Reveal Effect</title>
+  <meta charset="UTF-8">
+  <title>Haunted Window Scene</title>
   <style>
     body {
       margin: 0;
-      background: #000;
-      overflow: hidden;
-    }
-
-    .container {
-      position: relative;
-      width: 100vw;
+      background-color: #fdd835; /* Bright yellow wall */
       height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .background {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 1;
+    .window-container {
+      width: 300px;
+      height: 300px;
+      background-color: #000; /* Black window frame */
+      position: relative;
+      overflow: hidden;
+      border: 10px solid #333;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
 
-    .overlay {
-      position: absolute;
+    .shutter {
       width: 100%;
       height: 100%;
-      background: url('san_marino.png') no-repeat center center;
-      background-size: contain;
+      background-color: #111;
+      position: absolute;
+      top: 0;
+      left: 0;
       z-index: 2;
-      transition: transform 2s ease-in-out;
+      transition: all 2s ease;
     }
 
-    .overlay.slide-left {
-      transform: translateX(-100%);
+    .graveyard-scene {
+      background-image: url('https://cdn.pixabay.com/photo/2017/10/25/21/55/grave-2884534_1280.jpg'); /* Graveyard image */
+      background-size: cover;
+      background-position: center;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      position: relative;
     }
 
-    .button {
+    .shutter.open {
+      top: -100%;
+    }
+
+    .text-overlay {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 12px 24px;
-      background: rgba(255, 255, 255, 0.8);
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 3;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      color: white;
+      text-align: center;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="window-san-marino.png" alt="Street" class="background" />
-    <div class="overlay" id="overlay"></div>
-    <button class="button" onclick="slideCard()">Slide</button>
+
+  <div class="window-container">
+    <div class="shutter" id="shutter"></div>
+    <div class="graveyard-scene">
+      <div class="text-overlay">A haunted graveyard appears...</div>
+    </div>
   </div>
 
   <script>
-    function slideCard() {
-      document.getElementById('overlay').classList.add('slide-left');
-    }
+    // Automatically open the shutter after 2 seconds
+    setTimeout(() => {
+      document.getElementById('shutter').classList.add('open');
+    }, 2000);
   </script>
+
 </body>
 </html>
