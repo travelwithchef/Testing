@@ -3,66 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>San Marino Window Slide</title>
+  <title>San Marino Sliding Window</title>
   <style>
     html, body {
       margin: 0; padding: 0;
       height: 100%; width: 100%;
-      overflow: hidden;
       background-color: black;
-      font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    .window-wrapper {
+    .container {
       position: relative;
       width: 1333px;
       height: 2000px;
+      background: url('san_marino.png') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
     }
 
-    .background {
+    .overlay-image {
       position: absolute;
-      width: 100%;
-      height: 100%;
+      top: 0;
+      left: 0;
+      width: 1333px;
+      height: 2000px;
       background: url('window-san-marino.png') no-repeat center center;
       background-size: cover;
-      border: 5px solid #003366;
-      border-radius: 10px;
+      pointer-events: none;
       z-index: 1;
     }
 
-    .window-panel {
+    .slider-window {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      background: url('san_marino.png') no-repeat center center;
-      background-size: cover;
-      border: 5px solid #003366;
-      border-radius: 10px;
+      width: 300px;
+      height: 300px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      overflow: hidden;
       z-index: 2;
-      transition: left 2.5s ease;
-      left: 0;
       cursor: pointer;
     }
 
-    .window-panel.slide-left {
-      left: -100%;
+    .slider-content {
+      width: 1333px;
+      height: 2000px;
+      background: url('window-san-marino.png') no-repeat center center;
+      background-size: cover;
+      transform: translate(-50%, -50%);
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 2s ease;
     }
+
+    .slide-left .slider-content {
+      transform: translate(-250%, -50%);
+    }
+
   </style>
 </head>
 <body>
 
-  <div class="window-wrapper">
-    <div class="background"></div>
-    <div class="window-panel" id="windowPanel"></div>
+  <div class="container">
+    <!-- Background san_marino.png is set in .container -->
+    
+    <!-- This adds the background to slide under -->
+    <div class="overlay-image"></div>
+
+    <!-- Blue card window that slides -->
+    <div class="slider-window" id="sliderWindow">
+      <div class="slider-content"></div>
+    </div>
   </div>
 
   <script>
-    const panel = document.getElementById('windowPanel');
-    panel.addEventListener('click', () => {
-      panel.classList.toggle('slide-left');
+    const slider = document.getElementById('sliderWindow');
+    slider.addEventListener('click', () => {
+      slider.classList.toggle('slide-left');
     });
   </script>
 
