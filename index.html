@@ -1,67 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Haunted Window Click to Slide</title>
+  <meta charset="UTF-8" />
+  <title>Marine Drive Mumbai - Code Scene</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
     body {
       margin: 0;
-      background-color: #fdd835; /* Bright yellow wall */
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .window-container {
-      width: 1333px;
-      height: 2000px;
-      background-color: #000;
-      position: relative;
       overflow: hidden;
-      border: 10px solid #222;
-      box-shadow: 0 0 30px rgba(0,0,0,0.9);
-      cursor: pointer;
-    }
-
-    .shutter {
-      width: 100%;
-      height: 100%;
-      background-color: #111;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 2;
-      transition: left 2s ease;
-    }
-
-    .shutter.slide-left {
-      left: -100%;
-    }
-
-    .window-scene {
-      width: 100%;
-      height: 100%;
-      background-image: url('window-san-marino.png');
-      background-size: cover;
-      background-position: center;
-      position: relative;
-      z-index: 1;
     }
   </style>
 </head>
 <body>
-
-  <div class="window-container" onclick="slideWindow()">
-    <div class="shutter" id="shutter"></div>
-    <div class="window-scene"></div>
-  </div>
-
   <script>
-    function slideWindow() {
-      document.getElementById('shutter').classList.add('slide-left');
+    function setup() {
+      createCanvas(900, 500);
+      noLoop();
+    }
+
+    function draw() {
+      // Sky
+      background(70, 130, 180); // dusk blue
+
+      // Sea
+      fill(10, 30, 70);
+      rect(0, 350, width, 150);
+
+      // Curved Road - Marine Drive arc
+      fill(50);
+      noStroke();
+      beginShape();
+      vertex(0, 300);
+      bezierVertex(150, 280, 750, 280, width, 300);
+      vertex(width, 400);
+      bezierVertex(750, 420, 150, 420, 0, 400);
+      endShape(CLOSE);
+
+      // Road markings (yellow lines)
+      stroke(255, 204, 0);
+      strokeWeight(4);
+      noFill();
+      beginShape();
+      vertex(50, 340);
+      bezierVertex(200, 320, 700, 320, width - 50, 340);
+      endShape();
+
+      // Sidewalk - light grey
+      noStroke();
+      fill(200);
+      beginShape();
+      vertex(0, 300);
+      bezierVertex(150, 280, 750, 280, width, 300);
+      vertex(width, 290);
+      bezierVertex(750, 270, 150, 270, 0, 290);
+      endShape(CLOSE);
+
+      // Buildings - simple blocks along curve
+      fill(180, 180, 200, 200);
+      let buildingCount = 12;
+      for (let i = 0; i < buildingCount; i++) {
+        let x = map(i, 0, buildingCount - 1, 100, width - 100);
+        let y = 250 + 20 * sin(i * 1.5);
+        rect(x, y, 40, 60 + (i % 3) * 10);
+      }
+
+      // Street lights along the curve
+      stroke(255, 255, 180);
+      strokeWeight(3);
+      for (let i = 0; i < buildingCount; i++) {
+        let x = map(i, 0, buildingCount - 1, 130, width - 130);
+        let y = 300 + 10 * cos(i * 1.3);
+        line(x, y, x, y - 40);
+        ellipse(x, y - 45, 8, 8);
+      }
+
+      // Text - label
+      noStroke();
+      fill(255, 255, 255, 150);
+      textSize(18);
+      textAlign(CENTER);
+      text("Marine Drive - Mumbai", width / 2, 40);
     }
   </script>
-
 </body>
 </html>
