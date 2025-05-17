@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Color Extractor</title>
+  <title>Isolate Red Color</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,29 +11,17 @@
     }
     #canvas {
       border: 2px solid #000;
-      cursor: crosshair;
       max-width: 100%;
-      height: auto;
-    }
-    #colorInfo {
-      margin-top: 20px;
-      font-size: 18px;
-      padding: 10px;
-      border-radius: 5px;
-      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <h2>Click on the image to get the pixel color</h2>
+  <h2>Only Red Color Visible</h2>
   <canvas id="canvas"></canvas>
-  <p id="colorInfo">Waiting for image to load...</p>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const colorInfo = document.getElementById('colorInfo');
-
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = "extract.jpeg";
@@ -42,22 +30,29 @@
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      colorInfo.textContent = 'Click on the image to get pixel color';
+
+      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Check if red is dominant
+        if (r > 100 && r > g + 40 && r > b + 40) {
+          // keep red as is
+        } else {
+          // Convert to grayscale
+          const gray = 0.3 * r + 0.59 * g + 0.11 * b;
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
     };
-
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const pixel = ctx.getImageData(x, y, 1, 1).data;
-      const [r, g, b, a] = pixel;
-
-      const rgba = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      colorInfo.textContent = `Color at (${Math.floor(x)}, ${Math.floor(y)}): ${rgba}`;
-      colorInfo.style.backgroundColor = rgba;
-      colorInfo.style.color = (r*0.299 + g*0.587 + b*0.114) > 186 ? '#000' : '#fff';
-    });
   </script>
 </body>
 </html>
