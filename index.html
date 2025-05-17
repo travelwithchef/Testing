@@ -4,17 +4,30 @@
   <meta charset="UTF-8" />
   <title>Color Extractor</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 30px;
+    }
     #canvas {
-      border: 1px solid black;
+      border: 2px solid #000;
       cursor: crosshair;
       max-width: 100%;
+      height: auto;
+    }
+    #colorInfo {
+      margin-top: 20px;
+      font-size: 18px;
+      padding: 10px;
+      border-radius: 5px;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <h2>Click anywhere on the image to get the color</h2>
+  <h2>Click on the image to get the pixel color</h2>
   <canvas id="canvas"></canvas>
-  <p id="colorInfo">Click on the image to get pixel color</p>
+  <p id="colorInfo">Waiting for image to load...</p>
 
   <script>
     const canvas = document.getElementById('canvas');
@@ -22,13 +35,14 @@
     const colorInfo = document.getElementById('colorInfo');
 
     const img = new Image();
-    img.crossOrigin = "anonymous"; // Allow cross-origin for GitHub Pages
-    img.src = "extract.jpeg"; // Image must be in the same GitHub repo
+    img.crossOrigin = "anonymous";
+    img.src = "extract.jpeg";
 
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
+      colorInfo.textContent = 'Click on the image to get pixel color';
     };
 
     canvas.addEventListener('click', (e) => {
@@ -42,7 +56,7 @@
       const rgba = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
       colorInfo.textContent = `Color at (${Math.floor(x)}, ${Math.floor(y)}): ${rgba}`;
       colorInfo.style.backgroundColor = rgba;
-      colorInfo.style.color = (r*0.299 + g*0.587 + b*0.114) > 186 ? '#000' : '#fff'; // adjust text contrast
+      colorInfo.style.color = (r*0.299 + g*0.587 + b*0.114) > 186 ? '#000' : '#fff';
     });
   </script>
 </body>
