@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Isolate Red Color</title>
+  <title>Isolate Color by Hex</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,11 +12,27 @@
     #canvas {
       border: 2px solid #000;
       max-width: 100%;
+      margin-top: 15px;
+    }
+    input {
+      padding: 8px;
+      font-size: 16px;
+      width: 120px;
+      text-transform: uppercase;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h2>Only Red Color Visible</h2>
+  <h2>Isolate Color by Hex Code</h2>
+  <input id="colorInput" type="text" placeholder="#FF0000" maxlength="7" />
+  <button id="applyBtn">Apply</button>
+  <br />
   <canvas id="canvas"></canvas>
 
   <script>
@@ -26,33 +42,65 @@
     img.crossOrigin = "anonymous";
     img.src = "extract.jpeg";
 
+    // Helper: convert hex color to RGB object
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(h => h + h).join('');
+      }
+      const bigint = parseInt(hex, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255,
+      };
+    }
+
+    // Calculate color distance (Euclidean)
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1.r - c2.r, 2) +
+        Math.pow(c1.g - c2.g, 2) +
+        Math.pow(c1.b - c2.b, 2)
+      );
+    }
+
+    let originalImageData;
+
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
+      originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    };
 
-      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let data = imageData.data;
+    document.getElementById('applyBtn').addEventListener('click', () => {
+      const hex = document.getElementById('colorInput').value.trim();
+      if (!/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
+        alert('Please enter a valid hex color code like #FF0000');
+        return;
+      }
+      const targetColor = hexToRgb(hex);
+      const imageData = ctx.createImageData(originalImageData);
+      imageData.data.set(originalImageData.data);
+      const data = imageData.data;
+
+      const threshold = 100; // tolerance for color matching
 
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Check if red is dominant
-        if (r > 100 && r > g + 40 && r > b + 40) {
-          // keep red as is
-        } else {
-          // Convert to grayscale
-          const gray = 0.3 * r + 0.59 * g + 0.11 * b;
+        const pixelColor = { r: data[i], g: data[i + 1], b: data[i + 2] };
+        if (colorDistance(pixelColor, targetColor) > threshold) {
+          // convert to grayscale
+          const gray = 0.3 * pixelColor.r + 0.59 * pixelColor.g + 0.11 * pixelColor.b;
           data[i] = gray;
           data[i + 1] = gray;
           data[i + 2] = gray;
         }
+        // else keep the color as is
       }
 
       ctx.putImageData(imageData, 0, 0);
-    };
+    });
   </script>
 </body>
 </html>
