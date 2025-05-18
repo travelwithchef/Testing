@@ -1,224 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Color Isolation Tool</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #1a1a1a;
-            color: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-        input[type="text"], input[type="file"], select {
-            background-color: #333;
-            color: #f5f5f5;
-            border: 1px solid #c0c0c0;
-            padding: 5px;
-            margin: 10px 0;
-        }
-        button {
-            background-color: #c0c0c0;
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin: 10px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #a0a0a0;
-        }
-        canvas {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 20px auto;
-            border: 1px solid #c0c0c0;
-        }
-        #colorPreview {
-            width: 20px;
-            height: 20px;
-            display: inline-block;
-            vertical-align: middle;
-            border: 1px solid #c0c0c0;
-        }
-        small {
-            color: #c0c0c0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Ultra-HD Image Enhancer on GitHub Pages</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.8.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/esrgan-tfjs@0.1.2/dist/esrgan.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #inputImage, #outputImage { max-width: 100%; border: 1px solid #ccc; margin-top: 10px; }
+    button { margin-top: 10px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-3xl font-bold mb-4">Color Isolation Tool</h1>
-        <input type="file" id="imageUpload" accept="image/*" class="mb-4">
-        <br>
-        <select id="colorSelect" class="mb-4">
-            <option value="">Select a color</option>
-            <option value="#ff0000">Red</option>
-            <option value="#008000">Green</option>
-            <option value="#0000ff">Blue</option>
-            <option value="#ffff00">Yellow</option>
-            <option value="#ffa500">Orange</option>
-            <option value="#800080">Purple</option>
-            <option value="#ffc0cb">Pink</option>
-            <option value="#a52a2a">Brown</option>
-            <option value="#808080">Gray</option>
-        </select>
-        <input type="text" id="hexColor" placeholder="Or enter hex color" class="mb-4">
-        <div id="colorPreview" class="mb-4"></div>
-        <br>
-        <p class="mb-4">
-            <label for="tolerance">Tolerance: <span id="toleranceValue">100</span></label>
-            <input type="range" id="tolerance" min="0" max="255" value="100" class="mb-4">
-            <small>Adjust how close colors must be to the chosen color. Higher values capture more shades.</small>
-        </p>
-        <button id="analyzeBtn" class="mb-4">Analyze</button>
-        <br>
-        <canvas id="canvas" class="mb-4"></canvas>
-        <p id="percentage" class="mb-4">Percentage: N/A</p>
-        <button id="downloadBtn" style="display:none;" class="mb-4">Download</button>
-    </div>
-    <script>
-        const imageUpload = document.getElementById('imageUpload');
-        const colorSelect = document.getElementById('colorSelect');
-        const hexColor = document.getElementById('hexColor');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const canvas = document.getElementById('canvas');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const toleranceInput = document.getElementById('tolerance');
-        const toleranceValue = document.getElementById('toleranceValue');
-        let originalImg;
 
-        // Handle image upload
-        imageUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    originalImg = img; // Store the original image
-                    document.getElementById('percentage').textContent = 'Percentage: N/A'; // Reset percentage
-                }
-                img.src = event.target.result;
-            }
-            reader.readAsDataURL(file);
-        });
+  <h1>Ultra-HD Image Enhancer (4x) on GitHub Pages</h1>
 
-        // Update hex color and preview when a color is selected
-        colorSelect.addEventListener('change', function() {
-            const hex = this.value;
-            hexColor.value = hex;
-            document.getElementById('colorPreview').style.backgroundColor = hex;
-        });
+  <input type="file" id="fileInput" accept="image/*" />
+  <br />
+  <img id="inputImage" alt="Input Image" />
+  <br />
+  <button id="enhanceBtn" disabled>Enhance to Ultra-HD</button>
+  <br />
+  <canvas id="outputCanvas" style="display:none;"></canvas>
+  <br />
+  <img id="outputImage" alt="Enhanced Image" />
+  <br />
+  <a id="downloadLink" href="#" download="enhanced-image.png" style="display:none;">Download Enhanced Image</a>
 
-        // Update color preview when hex code is entered
-        hexColor.addEventListener('input', function() {
-            const hex = this.value.trim();
-            if (/^#[0-9A-F]{6}$/i.test(hex)) {
-                document.getElementById('colorPreview').style.backgroundColor = hex;
-            } else {
-                document.getElementById('colorPreview').style.backgroundColor = '';
-            }
-        });
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const inputImage = document.getElementById('inputImage');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const outputCanvas = document.getElementById('outputCanvas');
+    const outputImage = document.getElementById('outputImage');
+    const downloadLink = document.getElementById('downloadLink');
 
-        // Update tolerance value display
-        toleranceInput.addEventListener('input', function() {
-            toleranceValue.textContent = this.value;
-        });
+    let model;
 
-        // Handle analyze button click
-        analyzeBtn.addEventListener('click', function() {
-            if (!originalImg) {
-                alert('Please upload an image first.');
-                return;
-            }
-            const hex = hexColor.value.trim();
-            if (!/^#[0-9A-F]{6}$/i.test(hex)) {
-                alert('Please enter a valid hex color code or select a color.');
-                return;
-            }
-            const rgb = hexToRgb(hex);
-            if (!rgb) {
-                alert('Invalid hex color code.');
-                return;
-            }
-            const tolerance = parseInt(toleranceInput.value);
-            processImage(rgb, tolerance);
-        });
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      inputImage.src = url;
+      enhanceBtn.disabled = false;
+      outputImage.src = '';
+      downloadLink.style.display = 'none';
+    };
 
-        // Convert hex color code to RGB
-        function hexToRgb(hex) {
-            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                return r + r + g + g + b + b;
-            });
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
+    async function loadModel() {
+      if (!model) {
+        model = await ESRGAN.load();
+        console.log('Model loaded');
+      }
+    }
 
-        // Process the image to isolate the selected color and calculate percentage
-        function processImage(selectedRgb, tolerance) {
-            const ctx = canvas.getContext('2d');
-            // Redraw the original image
-            ctx.drawImage(originalImg, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            let matchingPixels = 0;
+    enhanceBtn.onclick = async () => {
+      if (!inputImage.src) return alert('Please select an image first.');
+      enhanceBtn.disabled = true;
+      enhanceBtn.textContent = 'Enhancing... (may take a while)';
+      await loadModel();
 
-            // Analyze each pixel
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const distance = Math.sqrt(
-                    Math.pow(r - selectedRgb.r, 2) +
-                    Math.pow(g - selectedRgb.g, 2) +
-                    Math.pow(b - selectedRgb.b, 2)
-                );
-                if (distance <= tolerance) {
-                    matchingPixels++; // Count pixels within tolerance
-                } else {
-                    // Convert to grayscale
-                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                    data[i] = gray;
-                    data[i + 1] = gray;
-                    data[i + 2] = gray;
-                }
-            }
+      // Draw input image to canvas to get image tensor
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = inputImage.naturalWidth;
+      canvas.height = inputImage.naturalHeight;
+      ctx.drawImage(inputImage, 0, 0);
 
-            // Update the canvas with the processed image
-            ctx.putImageData(imageData, 0, 0);
+      const inputTensor = tf.browser.fromPixels(canvas);
 
-            // Calculate and display the percentage
-            const totalPixels = canvas.width * canvas.height;
-            const percentage = (matchingPixels / totalPixels) * 100;
-            document.getElementById('percentage').textContent = `Percentage: ${percentage.toFixed(2)}%`;
+      // Run super resolution (4x)
+      const outputTensor = await model.predict(inputTensor);
 
-            // Show the download button
-            downloadBtn.style.display = 'block';
-        }
+      // Convert output tensor back to image data
+      await tf.browser.toPixels(outputTensor, outputCanvas);
 
-        // Handle download button click
-        downloadBtn.addEventListener('click', function() {
-            const link = document.createElement('a');
-            link.download = 'isolated_image.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        });
-    </script>
+      // Show enhanced image
+      outputCanvas.style.display = 'none';
+      outputImage.src = outputCanvas.toDataURL('image/png');
+
+      // Show download link
+      downloadLink.href = outputImage.src;
+      downloadLink.style.display = 'inline-block';
+
+      // Clean up tensors to free memory
+      inputTensor.dispose();
+      outputTensor.dispose();
+
+      enhanceBtn.disabled = false;
+      enhanceBtn.textContent = 'Enhance to Ultra-HD';
+    };
+  </script>
+
 </body>
 </html>
