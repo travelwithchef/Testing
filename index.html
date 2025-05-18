@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Neon Dreams</title>
+  <title>Tally Counter</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-animation"></div>
-
-  <div class="glass-card">
-    <h1>Neon Dreams</h1>
-    <p>Experience the beauty of modern UI magic. Designed for the future.</p>
-    <a href="#" class="neon-btn">Start Now</a>
+  <div class="container">
+    <h1>Tally Counter</h1>
+    <div id="count">0</div>
+    <div class="buttons">
+      <button onclick="increment()">+</button>
+      <button onclick="decrement()">−</button>
+      <button onclick="reset()">Reset</button>
+    </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
