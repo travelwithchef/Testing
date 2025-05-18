@@ -2,30 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ultra-HD Image Enhancer on GitHub Pages</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.8.0/dist/tf.min.js"></script>
+  <title>Ultra-HD Image Enhancer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/esrgan-tfjs@0.1.2/dist/esrgan.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #inputImage, #outputImage { max-width: 100%; border: 1px solid #ccc; margin-top: 10px; }
+    body { font-family: sans-serif; padding: 20px; }
+    img, canvas { max-width: 100%; margin-top: 20px; border: 1px solid #ccc; }
     button { margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <h1>Ultra-HD Image Enhancer (4x) on GitHub Pages</h1>
+  <h2>Ultra-HD Image Enhancer (4x)</h2>
 
-  <input type="file" id="fileInput" accept="image/*" />
-  <br />
-  <img id="inputImage" alt="Input Image" />
-  <br />
-  <button id="enhanceBtn" disabled>Enhance to Ultra-HD</button>
-  <br />
-  <canvas id="outputCanvas" style="display:none;"></canvas>
-  <br />
-  <img id="outputImage" alt="Enhanced Image" />
-  <br />
-  <a id="downloadLink" href="#" download="enhanced-image.png" style="display:none;">Download Enhanced Image</a>
+  <input type="file" id="fileInput" accept="image/*"><br>
+  <img id="inputImage" src="" alt="Input Image" />
+  <br>
+  <button id="enhanceBtn" disabled>Enhance Image</button>
+  <canvas id="outputCanvas" style="display: none;"></canvas>
+  <img id="outputImage" src="" alt="Enhanced Image" />
+  <br>
+  <a id="downloadLink" href="#" download="enhanced.png" style="display: none;">Download Ultra-HD Image</a>
 
   <script>
     const fileInput = document.getElementById('fileInput');
@@ -34,62 +31,69 @@
     const outputCanvas = document.getElementById('outputCanvas');
     const outputImage = document.getElementById('outputImage');
     const downloadLink = document.getElementById('downloadLink');
-
     let model;
 
-    fileInput.onchange = (e) => {
+    fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
-      inputImage.src = url;
-      enhanceBtn.disabled = false;
-      outputImage.src = '';
-      downloadLink.style.display = 'none';
-    };
+      const reader = new FileReader();
+      reader.onload = () => {
+        inputImage.src = reader.result;
+        enhanceBtn.disabled = false;
+        outputImage.src = '';
+        downloadLink.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
 
-    async function loadModel() {
+    enhanceBtn.addEventListener('click', async () => {
+      if (!inputImage.src) return;
+
+      enhanceBtn.disabled = true;
+      enhanceBtn.textContent = 'Loading model...';
+
+      // Load model once
       if (!model) {
         model = await ESRGAN.load();
         console.log('Model loaded');
       }
-    }
 
-    enhanceBtn.onclick = async () => {
-      if (!inputImage.src) return alert('Please select an image first.');
-      enhanceBtn.disabled = true;
-      enhanceBtn.textContent = 'Enhancing... (may take a while)';
-      await loadModel();
+      enhanceBtn.textContent = 'Enhancing... (please wait)';
 
-      // Draw input image to canvas to get image tensor
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = inputImage.naturalWidth;
-      canvas.height = inputImage.naturalHeight;
+      // Create temp canvas
+      const tempCanvas = document.createElement('canvas');
+      const ctx = tempCanvas.getContext('2d');
+      tempCanvas.width = inputImage.naturalWidth;
+      tempCanvas.height = inputImage.naturalHeight;
       ctx.drawImage(inputImage, 0, 0);
 
-      const inputTensor = tf.browser.fromPixels(canvas);
+      // Convert to tensor
+      const inputTensor = tf.browser.fromPixels(tempCanvas);
+      console.log('Original size:', inputTensor.shape);
 
-      // Run super resolution (4x)
-      const outputTensor = await model.predict(inputTensor);
+      try {
+        const outputTensor = await model.predict(inputTensor);
+        console.log('Enhanced size:', outputTensor.shape);
 
-      // Convert output tensor back to image data
-      await tf.browser.toPixels(outputTensor, outputCanvas);
+        outputCanvas.width = outputTensor.shape[1];
+        outputCanvas.height = outputTensor.shape[0];
+        await tf.browser.toPixels(outputTensor, outputCanvas);
 
-      // Show enhanced image
-      outputCanvas.style.display = 'none';
-      outputImage.src = outputCanvas.toDataURL('image/png');
+        const dataURL = outputCanvas.toDataURL('image/png');
+        outputImage.src = dataURL;
+        downloadLink.href = dataURL;
+        downloadLink.style.display = 'inline-block';
 
-      // Show download link
-      downloadLink.href = outputImage.src;
-      downloadLink.style.display = 'inline-block';
+        outputTensor.dispose();
+      } catch (err) {
+        alert('Error enhancing image: ' + err.message);
+        console.error(err);
+      }
 
-      // Clean up tensors to free memory
       inputTensor.dispose();
-      outputTensor.dispose();
-
+      enhanceBtn.textContent = 'Enhance Image';
       enhanceBtn.disabled = false;
-      enhanceBtn.textContent = 'Enhance to Ultra-HD';
-    };
+    });
   </script>
 
 </body>
