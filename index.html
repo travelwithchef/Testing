@@ -26,12 +26,18 @@
       margin-left: 10px;
       cursor: pointer;
     }
+    #stats {
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h2>Isolate Color by Hex Code</h2>
-  <input id="colorInput" type="text" placeholder="#FF0000" maxlength="7" />
+  <input id="colorInput" type="text" placeholder="#00FF00" maxlength="7" />
   <button id="applyBtn">Apply</button>
+  <button id="downloadBtn">Download</button>
+  <div id="stats"></div>
   <br />
   <canvas id="canvas"></canvas>
 
@@ -40,9 +46,17 @@
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = "greenery.jpg";
+    img.src = "greenery.jpg"; // You can replace this with your image
 
-    // Helper: convert hex color to RGB object
+    let originalImageData;
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    };
+
     function hexToRgb(hex) {
       hex = hex.replace('#', '');
       if (hex.length === 3) {
@@ -56,7 +70,6 @@
       };
     }
 
-    // Calculate color distance (Euclidean)
     function colorDistance(c1, c2) {
       return Math.sqrt(
         Math.pow(c1.r - c2.r, 2) +
@@ -65,19 +78,10 @@
       );
     }
 
-    let originalImageData;
-
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    };
-
     document.getElementById('applyBtn').addEventListener('click', () => {
       const hex = document.getElementById('colorInput').value.trim();
       if (!/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
-        alert('Please enter a valid hex color code like #FF0000');
+        alert('Please enter a valid hex color code like #00FF00');
         return;
       }
       const targetColor = hexToRgb(hex);
@@ -85,21 +89,34 @@
       imageData.data.set(originalImageData.data);
       const data = imageData.data;
 
-      const threshold = 100; // tolerance for color matching
+      const threshold = 100; // tolerance level
+
+      let matchCount = 0;
+      const totalPixels = data.length / 4;
 
       for (let i = 0; i < data.length; i += 4) {
         const pixelColor = { r: data[i], g: data[i + 1], b: data[i + 2] };
         if (colorDistance(pixelColor, targetColor) > threshold) {
-          // convert to grayscale
           const gray = 0.3 * pixelColor.r + 0.59 * pixelColor.g + 0.11 * pixelColor.b;
           data[i] = gray;
           data[i + 1] = gray;
           data[i + 2] = gray;
+        } else {
+          matchCount++;
         }
-        // else keep the color as is
       }
 
       ctx.putImageData(imageData, 0, 0);
+
+      const percent = ((matchCount / totalPixels) * 100).toFixed(2);
+      document.getElementById('stats').textContent = `${percent}% of the image matches the selected color`;
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'isolated-color-image.png';
+      link.href = canvas.toDataURL();
+      link.click();
     });
   </script>
 </body>
