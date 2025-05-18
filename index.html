@@ -2,36 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Color Analysis Tool</title>
+  <title>Scientific Color Analyzer</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #f2f2f2;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h2 {
       margin-top: 30px;
+      font-size: 28px;
+      color: #ffffff;
+      letter-spacing: 1px;
     }
+
     #canvas {
-      border: 2px solid #000;
-      margin-top: 15px;
-      max-width: 100%;
+      border: 1px solid #444;
+      margin-top: 20px;
+      max-width: 90%;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     }
+
     input, button {
-      padding: 8px;
+      padding: 10px 16px;
+      margin: 8px;
       font-size: 16px;
-      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+      font-family: inherit;
     }
+
+    input[type="text"] {
+      background-color: #2a2a2a;
+      color: #fff;
+      border: 1px solid #555;
+      width: 120px;
+      text-align: center;
+    }
+
+    button {
+      background-color: #333;
+      color: #f2f2f2;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
     #result {
-      font-weight: bold;
-      margin-top: 15px;
+      margin-top: 16px;
+      font-size: 18px;
+      color: #d0d0d0;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
     }
   </style>
 </head>
 <body>
-  <h2>Isolate and Analyze Color</h2>
-  <input id="colorInput" type="text" placeholder="#00FF00" maxlength="7" />
-  <button id="applyBtn">Apply</button>
-  <button id="downloadBtn">Download Image</button>
+  <h2>Scientific Color Analyzer</h2>
+
+  <div class="controls">
+    <input id="colorInput" type="text" placeholder="#00FF00" maxlength="7" />
+    <button id="applyBtn">Analyze</button>
+    <button id="downloadBtn">Download Image</button>
+  </div>
+
   <p id="result">Matching pixels: 0%</p>
-  <br />
   <canvas id="canvas"></canvas>
 
   <script>
@@ -39,8 +89,8 @@
     const ctx = canvas.getContext('2d');
     const result = document.getElementById('result');
     const img = new Image();
-    img.crossOrigin = "anonymous"; // CORS-friendly
-    img.src = "greenery.jpg"; // Replace with your image path
+    img.crossOrigin = "anonymous";
+    img.src = "greenery.jpg"; // Replace with your image
 
     function hexToRgb(hex) {
       hex = hex.replace('#', '');
@@ -73,7 +123,7 @@
     document.getElementById('applyBtn').addEventListener('click', () => {
       const hex = document.getElementById('colorInput').value.trim();
       if (!/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
-        alert('Enter valid hex color code like #00FF00');
+        alert('Enter a valid hex color code (e.g., #00FF00)');
         return;
       }
 
@@ -82,7 +132,7 @@
       imageData.data.set(originalImageData.data);
       const data = imageData.data;
 
-      const threshold = 80; // Relaxed for better detection
+      const threshold = 80;
       let matchCount = 0;
       const totalPixels = data.length / 4;
 
@@ -102,7 +152,6 @@
 
       const percent = ((matchCount / totalPixels) * 100).toFixed(2);
       result.textContent = `Matching pixels: ${percent}%`;
-
       ctx.putImageData(imageData, 0, 0);
     });
 
