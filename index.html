@@ -42,6 +42,9 @@
             vertical-align: middle;
             border: 1px solid #c0c0c0; /* Light silver border */
         }
+        small {
+            color: #c0c0c0; /* Light silver text for description */
+        }
     </style>
 </head>
 <body>
@@ -55,10 +58,12 @@
         <p>
             <label for="tolerance">Tolerance: <span id="toleranceValue">50</span></label>
             <input type="range" id="tolerance" min="0" max="255" value="50">
+            <small>Adjust how close colors must be to the chosen color to remain in color. Lower values are stricter.</small>
         </p>
         <button id="analyzeBtn">Analyze</button>
         <br>
         <canvas id="canvas"></canvas>
+        <p id="percentage">Percentage: N/A</p>
         <button id="downloadBtn" style="display:none;">Download</button>
     </div>
     <script>
@@ -83,6 +88,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
                     originalImg = img; // Store the original image
+                    document.getElementById('percentage').textContent = 'Percentage: N/A'; // Reset percentage
                 }
                 img.src = event.target.result;
             }
@@ -138,13 +144,16 @@
             } : null;
         }
 
-        // Process the image to isolate the selected color
+        // Process the image to isolate the selected color and calculate percentage
         function processImage(selectedRgb, tolerance) {
             const ctx = canvas.getContext('2d');
             // Redraw the original image
             ctx.drawImage(originalImg, 0, 0);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
+            let matchingPixels = 0;
+
+            // Analyze each pixel
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
@@ -154,7 +163,9 @@
                     Math.pow(g - selectedRgb.g, 2) +
                     Math.pow(b - selectedRgb.b, 2)
                 );
-                if (distance > tolerance) {
+                if (distance <= tolerance) {
+                    matchingPixels++; // Count pixels within tolerance
+                } else {
                     // Convert to grayscale
                     const gray = 0.299 * r + 0.587 * g + 0.114 * b;
                     data[i] = gray;
@@ -162,8 +173,17 @@
                     data[i + 2] = gray;
                 }
             }
+
+            // Update the canvas with the processed image
             ctx.putImageData(imageData, 0, 0);
-            downloadBtn.style.display = 'block'; // Show download button
+
+            // Calculate and display the percentage
+            const totalPixels = canvas.width * canvas.height;
+            const percentage = (matchingPixels / totalPixels) * 100;
+            document.getElementById('percentage').textContent = `Percentage: ${percentage.toFixed(2)}%`;
+
+            // Show the download button
+            downloadBtn.style.display = 'block';
         }
 
         // Handle download button click
