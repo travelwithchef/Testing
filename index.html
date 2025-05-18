@@ -1,66 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Infinite Image Zoom</title>
-  <style>
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f0f0f0;
-    }
-    .container {
-      position: relative;
-      width: 80vw;
-      height: 80vh;
-      overflow: hidden;
-    }
-    img {
-      transition: transform 0.2s ease-in-out;
-      cursor: zoom-in;
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Elegant UI</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
 </head>
 <body>
-
-  <div class="container">
-    <img id="zoomImage" src="https://via.placeholder.com/1500" alt="Zoomable Image">
+  <div class="hero">
+    <nav>
+      <h1 class="logo">UI<span>Dream</span></h1>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Designs</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="content">
+      <h2>Design That Speaks</h2>
+      <p>Crafting elegant, responsive, and immersive UI experiences</p>
+      <a href="#" class="btn">Explore Now</a>
+    </div>
+    <div class="floating-shapes"></div>
   </div>
 
-  <script>
-    const img = document.getElementById('zoomImage');
-    let scale = 1; // Initial zoom level
+  <footer>
+    <p>Made with love by a Full-Stack Developer</p>
+  </footer>
 
-    // Function to zoom in or out
-    function zoom(event) {
-      event.preventDefault();
-
-      // Calculate the new scale factor based on scroll direction
-      if (event.deltaY < 0) {
-        scale *= 1.1; // Zoom in
-      } else {
-        scale /= 1.1; // Zoom out
-      }
-
-      // Apply the new scale to the image
-      img.style.transform = `scale(${scale})`;
-    }
-
-    // Attach the zoom functionality to mouse wheel
-    img.addEventListener('wheel', zoom);
-
-    // Optional: Allow click to reset zoom level
-    img.addEventListener('click', () => {
-      scale = 1; // Reset scale
-      img.style.transform = `scale(${scale})`;
-    });
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
