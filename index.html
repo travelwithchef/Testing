@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Scientific Color Isolation Tool</title>
+  <title>Color Isolation and Analysis</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,49 +11,36 @@
     }
     #canvas {
       border: 2px solid #000;
-      max-width: 90%;
+      max-width: 100%;
       margin-top: 15px;
     }
-    input {
+    input, button {
       padding: 8px;
       font-size: 16px;
-      width: 120px;
-      text-transform: uppercase;
-    }
-    button {
-      padding: 8px 12px;
-      font-size: 16px;
-      margin: 10px;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 15px;
-      font-size: 18px;
-      font-weight: bold;
+      margin: 5px;
     }
   </style>
 </head>
 <body>
-  <h2>Scientific Color Isolation by Hex Code</h2>
+  <h2>Isolate Color by Hex Code</h2>
   <input id="colorInput" type="text" placeholder="#00FF00" maxlength="7" />
   <button id="applyBtn">Apply</button>
   <button id="downloadBtn">Download Image</button>
-  <div id="result"></div>
-  <br />
+  <p id="colorRatio"></p>
   <canvas id="canvas"></canvas>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const colorInput = document.getElementById('colorInput');
+    const colorRatio = document.getElementById('colorRatio');
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = "aldona-greenery.jpg"; // Replace this with your actual image path
-
-    let originalImageData;
+    img.src = "greenery.jpg"; // Replace with your image path or URL
 
     // Convert hex to RGB
     function hexToRgb(hex) {
-      hex = hex.replace('#', '');
+      hex = hex.replace("#", "");
       if (hex.length === 3) {
         hex = hex.split('').map(h => h + h).join('');
       }
@@ -65,7 +52,6 @@
       };
     }
 
-    // Calculate color distance
     function colorDistance(c1, c2) {
       return Math.sqrt(
         Math.pow(c1.r - c2.r, 2) +
@@ -73,6 +59,8 @@
         Math.pow(c1.b - c2.b, 2)
       );
     }
+
+    let originalImageData;
 
     img.onload = () => {
       canvas.width = img.width;
@@ -82,57 +70,44 @@
     };
 
     document.getElementById('applyBtn').addEventListener('click', () => {
-      if (!originalImageData) {
-        alert("Image is still loading. Please wait.");
-        return;
-      }
-
-      const hex = document.getElementById('colorInput').value.trim();
+      const hex = colorInput.value.trim();
       if (!/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
-        alert('Please enter a valid hex color code like #00FF00');
+        alert('Please enter a valid hex color code.');
         return;
       }
 
       const targetColor = hexToRgb(hex);
-      const threshold = 25; // Tight threshold for scientific accuracy
-
       const imageData = ctx.createImageData(originalImageData);
       imageData.data.set(originalImageData.data);
       const data = imageData.data;
 
       let matchCount = 0;
-      let visiblePixelCount = 0;
+      const totalPixels = canvas.width * canvas.height;
+      const threshold = 35; // Tighter threshold for scientific precision
 
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-        if (a < 128) continue; // Ignore transparent pixels
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const distance = colorDistance({ r, g, b }, targetColor);
 
-        visiblePixelCount++;
-        const pixelColor = { r, g, b };
-
-        if (colorDistance(pixelColor, targetColor) <= threshold) {
+        if (distance <= threshold) {
           matchCount++;
-          // keep color
         } else {
-          // convert to grayscale
+          // Grayscale non-matching pixels
           const gray = 0.3 * r + 0.59 * g + 0.11 * b;
-          data[i] = gray;
-          data[i + 1] = gray;
-          data[i + 2] = gray;
+          data[i] = data[i + 1] = data[i + 2] = gray;
         }
       }
 
       ctx.putImageData(imageData, 0, 0);
 
-      const percent = ((matchCount / visiblePixelCount) * 100).toFixed(2);
-      document.getElementById('result').textContent =
-        `Color ${hex.toUpperCase()} occupies approx. ${percent}% of the visible image.`;
+      const percent = ((matchCount / totalPixels) * 100).toFixed(2);
+      colorRatio.innerText = `Matching Color Coverage: ${percent}%`;
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
       const link = document.createElement('a');
-      link.download = 'isolated-color.png';
-      link.href = canvas.toDataURL('image/png');
+      link.download = 'color_isolated_image.png';
+      link.href = canvas.toDataURL();
       link.click();
     });
   </script>
