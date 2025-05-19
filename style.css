@@ -1,36 +1,104 @@
+:root {
+    --black: #121212;
+    --off-white: #F5F5F5;
+    --crimson: #DC143C;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+    background-color: var(--black);
+    color: var(--off-white);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 .container {
-  background: white;
-  padding: 2rem;
-  text-align: center;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
 }
 
-#count {
-  font-size: 5rem;
-  margin: 20px 0;
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+}
+
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.controls, .preview {
+    width: 48%;
+}
+
+#uploadArea {
+    border: 2px dashed var(--off-white);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#uploadArea:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+label {
+    display: block;
+    margin: 15px 0 5px;
+    font-size: 1.1em;
+}
+
+input[type="color"],
+input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    background-color: var(--black);
+    border: 1px solid var(--off-white);
+    color: var(--off-white);
+    border-radius: 4px;
 }
 
 button {
-  font-size: 2rem;
-  padding: 0.5rem 1rem;
-  margin: 0 0.5rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
+    background-color: var(--crimson);
+    color: var(--off-white);
+    border: none;
+    padding: 10px 20px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+button:hover:not(:disabled) {
+    background-color: #b01030;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#canvas {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--off-white);
+}
+
+#percentage {
+    margin: 15px 0;
+    font-size: 1.2em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .flex-container {
+        flex-direction: column;
+    }
+    .controls, .preview {
+        width: 100%;
+    }
 }
