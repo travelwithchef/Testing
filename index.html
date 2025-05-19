@@ -1,51 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColorVibe Studio</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Color Isolation Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f4f4f4;
+      text-align: center;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+    }
+    #colorBox {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-left: 10px;
+      border: 1px solid #000;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>ColorVibe Studio</h1>
-            <p>Highlight your favorite color in any image</p>
-        </header>
-        <main class="grid-container">
-            <section class="controls">
-                <div class="upload-card">
-                    <label for="fileInput" class="upload-label">
-                        <span class="upload-icon">📷</span>
-                        <span>Upload Image from Gallery</span>
-                    </label>
-                    <input type="file" id="fileInput" accept="image/*">
-                    <p class="upload-hint">Or drag and drop your image here</p>
-                </div>
-                <div class="control-group">
-                    <label for="colorPicker">Pick Your Color</label>
-                    <input type="color" id="colorPicker" value="#ff0000">
-                </div>
-                <div class="control-group">
-                    <label for="threshold">Color Match Sensitivity</label>
-                    <input type="range" id="threshold" min="0" max="100" value="30">
-                    <span id="thresholdValue">30</span>
-                </div>
-                <button id="processBtn" class="action-btn" disabled>Process Image</button>
-            </section>
-            <section class="preview">
-                <div class="canvas-container">
-                    <canvas id="canvas"></canvas>
-                    <div class="percentage-card">
-                        <span>Selected Color Percentage:</span>
-                        <span id="percentage">N/A</span>
-                    </div>
-                </div>
-                <button id="downloadBtn" class="action-btn secondary" disabled>Download Image</button>
-            </section>
-        </main>
-    </div>
-    <script src="script.js"></script>
+  <h1>Color Isolation Tool</h1>
+  <input type="file" id="imageInput" accept="image/*"><br><br>
+  <canvas id="canvas"></canvas><br><br>
+  <p>Click on the image to select a color to isolate.</p>
+  <p>Selected Color: <span id="colorText">None</span> <span id="colorBox"></span></p>
+  <p id="colorPercentage"></p>
+  <button id="downloadBtn" style="display:none;">Download Image</button>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const colorText = document.getElementById('colorText');
+    const colorBox = document.getElementById('colorBox');
+    const colorPercentage = document.getElementById('colorPercentage');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let originalImage = new Image();
+    let selectedColor = null;
+
+    imageInput.addEventListener('change', function () {
+      const file = imageInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        originalImage.onload = () => {
+          canvas.width = originalImage.width;
+          canvas.height = originalImage.height;
+          ctx.drawImage(originalImage, 0, 0);
+        };
+        originalImage.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    canvas.addEventListener('click', function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      selectedColor = { r: pixel[0], g: pixel[1], b: pixel[2] };
+      colorText.textContent = `rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`;
+      colorBox.style.backgroundColor = `rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`;
+      isolateColor();
+    });
+
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1.r - c2.r, 2) +
+        Math.pow(c1.g - c2.g, 2) +
+        Math.pow(c1.b - c2.b, 2)
+      );
+    }
+
+    function isolateColor() {
+      const tolerance = 50; // Change this for sensitivity
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let matchCount = 0;
+      for (let i = 0; i < imgData.data.length; i += 4) {
+        const r = imgData.data[i];
+        const g = imgData.data[i + 1];
+        const b = imgData.data[i + 2];
+        const dist = colorDistance({ r, g, b }, selectedColor);
+        if (dist > tolerance) {
+          // Convert to grayscale
+          const avg = (r + g + b) / 3;
+          imgData.data[i] = avg;
+          imgData.data[i + 1] = avg;
+          imgData.data[i + 2] = avg;
+        } else {
+          matchCount++;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const totalPixels = (canvas.width * canvas.height);
+      const percent = ((matchCount / totalPixels) * 100).toFixed(2);
+      colorPercentage.textContent = `Color match: ${percent}%`;
+      downloadBtn.style.display = 'inline-block';
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'isolated-color-image.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  </script>
 </body>
 </html>
