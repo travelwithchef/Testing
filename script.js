@@ -3,21 +3,34 @@ let hasImage = false;
 let hasProcessed = false;
 
 function init() {
-    const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
+    const uploadCard = document.querySelector('.upload-card');
     const processBtn = document.getElementById('processBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const thresholdInput = document.getElementById('threshold');
+    const thresholdValue = document.getElementById('thresholdValue');
 
-    // Upload area click triggers file input
-    uploadArea.addEventListener('click', () => fileInput.click());
+    // Update threshold display
+    thresholdInput.addEventListener('input', () => {
+        thresholdValue.textContent = thresholdInput.value;
+    });
+
+    // File input change
     fileInput.addEventListener('change', handleUpload);
 
-    // Drag and drop support
-    uploadArea.addEventListener('dragover', (e) => e.preventDefault());
-    uploadArea.addEventListener('drop', (e) => {
+    // Drag and drop
+    uploadCard.addEventListener('dragover', (e) => {
         e.preventDefault();
+        uploadCard.style.background = 'rgba(255, 255, 255, 0.2)';
+    });
+    uploadCard.addEventListener('dragleave', () => {
+        uploadCard.style.background = 'rgba(255, 255, 255, 0.1)';
+    });
+    uploadCard.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadCard.style.background = 'rgba(255, 255, 255, 0.1)';
         const file = e.dataTransfer.files[0];
-        if (file) loadImage(file);
+        if (file && file.type.startsWith('image/')) loadImage(file);
     });
 
     processBtn.addEventListener('click', processImage);
@@ -26,7 +39,7 @@ function init() {
 
 function handleUpload(e) {
     const file = e.target.files[0];
-    if (file) loadImage(file);
+    if (file && file.type.startsWith('image/')) loadImage(file);
 }
 
 function loadImage(file) {
@@ -43,7 +56,7 @@ function loadImage(file) {
             hasProcessed = false;
             document.getElementById('processBtn').disabled = false;
             document.getElementById('downloadBtn').disabled = true;
-            document.getElementById('percentage').textContent = 'Percentage: N/A';
+            document.getElementById('percentage').textContent = 'N/A';
         };
         originalImage.src = event.target.result;
     };
@@ -57,12 +70,12 @@ function processImage() {
     }
 
     const colorHex = document.getElementById('colorPicker').value;
-    const threshold = parseInt(document.getElementById('threshold').value);
+    const threshold = parseInt(document.getElementById('threshold').value) * 2.55; // Scale 0-100 to 0-255
     const targetRgb = hexToRgb(colorHex);
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Redraw original image before processing
+    // Redraw original image
     ctx.drawImage(originalImage, 0, 0);
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imgData.data;
@@ -70,54 +83,24 @@ function processImage() {
     let matchingCount = 0;
     let totalCount = 0;
 
-    // Process each pixel
+    // Process pixels
     for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
         const a = data[i + 3];
 
-        if (a > 0) { // Only consider non-transparent pixels
+        if (a > 0) {
             totalCount++;
             const distance = calculateDistance(r, g, b, targetRgb[0], targetRgb[1], targetRgb[2]);
             if (distance < threshold) {
                 matchingCount++;
             } else {
-                // Convert to grayscale
                 const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                data[i] = gray;     // R
-                data[i + 1] = gray; // G
-                data[i + 2] = gray; // B
-                // Alpha remains unchanged
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
             }
         }
     }
 
-    ctx.putImageData(imgData, 0, 0);
-    const percentage = totalCount > 0 ? (matchingCount / totalCount * 100).toFixed(2) : 0;
-    document.getElementById('percentage').textContent = `Percentage: ${percentage}%`;
-    hasProcessed = true;
-    document.getElementById('downloadBtn').disabled = false;
-}
-
-function hexToRgb(hex) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return [r, g, b];
-}
-
-function calculateDistance(r1, g1, b1, r2, g2, b2) {
-    return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
-}
-
-function downloadImage() {
-    if (!hasProcessed) return;
-    const canvas = document.getElementById('canvas');
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = 'highlighted_image.png';
-    link.click();
-}
-
-init();
