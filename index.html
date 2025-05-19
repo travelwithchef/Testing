@@ -1,73 +1,42 @@
-alert('Invalid hex color code.');
-                return;
-            }
-            const tolerance = parseInt(toleranceInput.value);
-            processImage(rgb, tolerance);
-        });
+// File: App.jsx import React, { useState } from 'react'; import { HexColorPicker } from "react-colorful"; import { Button } from "@/components/ui/button"; import { Card, CardContent } from "@/components/ui/card"; import { motion } from "framer-motion"; import './App.css';
 
-        // Convert hex color code to RGB
-        function hexToRgb(hex) {
-            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                return r + r + g + g + b + b;
-            });
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
+function App() { const [image, setImage] = useState(null); const [selectedColor, setSelectedColor] = useState("#ff0000"); const [processedImage, setProcessedImage] = useState(null); const [percentage, setPercentage] = useState(null);
 
-        // Process the image to isolate the selected color and calculate percentage
-        function processImage(selectedRgb, tolerance) {
-            const ctx = canvas.getContext('2d');
-            // Redraw the original image
-            ctx.drawImage(originalImg, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            let matchingPixels = 0;
+const handleImageUpload = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = () => setImage(reader.result); reader.readAsDataURL(file); } };
 
-            // Analyze each pixel
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const distance = Math.sqrt(
-                    Math.pow(r - selectedRgb.r, 2) +
-                    Math.pow(g - selectedRgb.g, 2) +
-                    Math.pow(b - selectedRgb.b, 2)
-                );
-                if (distance <= tolerance) {
-                    matchingPixels++; // Count pixels within tolerance
-                } else {
-                    // Convert to grayscale
-                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                    data[i] = gray;
-                    data[i + 1] = gray;
-                    data[i + 2] = gray;
-                }
-            }
+const processImage = async () => { const res = await fetch("http://localhost:5000/process", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image, selectedColor }) }); const data = await res.json(); setProcessedImage(data.processed); setPercentage(data.percentage); };
 
-            // Update the canvas with the processed image
-            ctx.putImageData(imageData, 0, 0);
+return ( <div className="min-h-screen bg-black text-offwhite p-8"> <motion.h1 className="text-4xl mb-4 text-creemson" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Color Highlighter</motion.h1> <input type="file" accept="image/*" onChange={handleImageUpload} className="mb-4" /> <HexColorPicker color={selectedColor} onChange={setSelectedColor} /> <Button onClick={processImage} className="mt-4">Highlight Color</Button> {processedImage && ( <Card className="mt-6"> <CardContent> <img src={data:image/png;base64,${processedImage}} alt="Processed" className="w-full" /> <p className="mt-2 text-creemson">Color Coverage: {percentage}%</p> <a href={data:image/png;base64,${processedImage}} download="highlighted.png"> <Button className="mt-2">Download Image</Button> </a> </CardContent> </Card> )} </div> ); }
 
-            // Calculate and display the percentage
-            const totalPixels = canvas.width * canvas.height;
-            const percentage = (matchingPixels / totalPixels) * 100;
-            document.getElementById('percentage').textContent = `Percentage: ${percentage.toFixed(2)}%`;
+export default App;
 
-            // Show the download button
-            downloadBtn.style.display = 'block';
-        }
+// File: server.py (Flask Backend) from flask import Flask, request, jsonify from flask_cors import CORS import base64 import cv2 import numpy as np from io import BytesIO from PIL import Image
 
-        // Handle download button click
-        downloadBtn.addEventListener('click', function() {
-            const link = document.createElement('a');
-            link.download = 'isolated_image.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        });
-    </script>
-</body>
-            </html>
+app = Flask(name) CORS(app)
+
+def hex_to_bgr(hex_color): hex_color = hex_color.lstrip('#') rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4)) return rgb[::-1]
+
+@app.route('/process', methods=['POST']) def process(): data = request.json img_data = base64.b64decode(data['image'].split(',')[1]) img = Image.open(BytesIO(img_data)).convert('RGB') img_np = np.array(img) selected_color = hex_to_bgr(data['selectedColor'])
+
+# Create mask
+lower = np.array([max(0, c-40) for c in selected_color])
+upper = np.array([min(255, c+40) for c in selected_color])
+mask = cv2.inRange(cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR), lower, upper)
+
+# Calculate percentage
+coverage = (cv2.countNonZero(mask) / mask.size) * 100
+
+# Highlight selected color and grayscale rest
+gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+gray_3ch = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+result = np.where(mask[:, :, None].astype(bool), img_np, gray_3ch)
+
+_, buffer = cv2.imencode('.png', cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
+processed_b64 = base64.b64encode(buffer).decode('utf-8')
+
+return jsonify({"processed": processed_b64, "percentage": round(coverage, 2)})
+
+if name == 'main': app.run(debug=True)
+
+// File: App.css body { font-family: 'Segoe UI', sans-serif; background-color: #000; color: #f5f5f5; } .text-offwhite { color: #f8f9fa; } .text-creemson { color: #dc143c; } .bg-creemson { background-color: #dc143c; }
+
